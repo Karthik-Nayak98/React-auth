@@ -1,50 +1,47 @@
 import React, { useState, useEffect } from 'react';
-import Home from './pages/HomePage';
-import About from './pages/AboutPage';
-import Navbar from './components/Navbar';
-import Skills from './pages/SkillsPage';
-import Project from './pages/ProjectsPage';
-import Contact from './pages/ContactPage';
-import Footer from './components/Footer';
-import icons from './helper/icons';
-import Particles from 'react-particles-js';
-import ParticleConfig from './config/particleConfig';
-import projects from './helper/project';
-import './style.css';
+import Login from './Pages/Login';
+import SignUp from './Pages/SignUp';
+import Welcome from './Pages/Welcome';
+import { Switch, Route, Redirect } from 'react-router-dom';
+import PrivateRoute from './helper/PrivateRoute';
+import PasswordReset from './Pages/PasswordReset';
+import UpdateProfile from './Pages/updateProfile';
+import EmailVerification from './Pages/emailVerification';
+import { auth } from './firebase';
 
 function App() {
-  const [loading, setLoading] = useState(true);
-
-  function fakePromise() {
-    return new Promise((resolve) => setTimeout(resolve, 2000));
-  }
+  const [authenticated, isAuthenticated] = useState(false);
   useEffect(() => {
-    fakePromise().then(() => {
-      const loader = document.querySelector('.loading');
-      if (loader) {
-        loader.remove();
-        setLoading(!loading);
+    auth.onAuthStateChanged((user) => {
+      if (user) {
+        isAuthenticated(true);
+      } else {
+        isAuthenticated(false);
       }
     });
-  });
-
-  if (loading) {
-    return null;
-  }
-
+  }, []);
   return (
-    <main className='rootComponent bg-dark font-mono'>
-      <Navbar />
-      <div className='absolute'>
-        <Particles height='100vh' width='100vw' params={ParticleConfig} />
-      </div>
-      <Home />
-      <About />
-      <Skills icons={icons} />
-      <Project projects={projects} />
-      <Contact />
-      <Footer />
-    </main>
+    <div className='App'>
+      <Switch>
+        <Route path='/login' component={Login} />
+        <Route path='/signup' component={SignUp} />
+        <Route exact path='/forgot' component={PasswordReset} />
+        <Route exact path='/verify' component={EmailVerification} />
+        <PrivateRoute
+          exact
+          path='/home'
+          auth={authenticated}
+          component={Welcome}
+        />
+        <PrivateRoute
+          exact
+          path='/update'
+          auth={authenticated}
+          component={UpdateProfile}
+        />
+        <Redirect to='/login' />
+      </Switch>
+    </div>
   );
 }
 
